@@ -18,42 +18,32 @@ model is simulated and the states are differentiatied to obtain V and A. With ad
 position of the robot. If collision is detected, we add this to the integrated data.
 
 Created by Srinivas K."""
-    def __init__(self):
-        #self.pose = [0, 0, 0]         # Pose of the robot 
-        #self.v = 0                    # Velocity input to the robot
-        #self.g =0                     # Steering input to the robot
-        pass
+    def __init__(self,canvas):
+        self.cursor_objects = []
+        self.canvas = canvas
     
     def motion(self, pose, control, dt):  # Unicycle mkotion model
-        return ([x+y for x,y in zip(pose,[control[0]*dt*cos(control[1]+pose[2]), control[0]*dt*sin(control[1]+pose[2]), 
-                                               control[0]*dt*sin(control[1])/WB])] )
+        return ([x+y for x,y in zip(pose,[control[0]*dt*cos(control[1]*pi/180+pose[2]), 
+                                          control[0]*dt*sin(control[1]*pi/180+pose[2]), 
+                                          control[0]*dt*sin(control[1]*pi/180)/WB])])
     
     def draw(self, pose):     # Draw the Sphero robot in the simulated scene
+        if self.cursor_objects:
+            map(self.canvas.delete, self.cursor_objects)
+            self.cursor_objects = []
         r = 10     # Radius of the sphero robot
         xsp, ysp =[], []
         xsp.append(pose[0])
         ysp.append(pose[1])
         for i in arange(0,360,1):      # List of spherical points
-            xsp.append(pose[0] + r * cos(i*pi/180))
-            ysp.append(pose[1] + r * sin(i*pi/180))
-            
-        return (xsp,ysp)
-    
-    def callme(self, pose, control, w):
+            xsp.append(pose[0] + r * cos(i*pi/180+(pose[2]*180/pi)))
+            ysp.append(pose[1] + r * sin(i*pi/180+(pose[2]*180/pi)))
         
-        pose = self.motion(pose,control,0.1)
-        print pose
-        f = self.draw(pose)
-    
+        f = (xsp,ysp)
+        
         for i in range(len(f[0])):
-            w.create_line(f[0][(i)%len(f[0])],f[1][(i)%len(f[0])],f[0][(i+1)%len(f[0])],f[1][(i+1)%len(f[0])])
-            
-        self.after(1000,self.callme(pose,control,w))
+            self.cursor_objects.append(self.canvas.create_line(f[0][(i)%len(f[0])],f[1][(i)%len(f[0])],
+                                                         f[0][(i+1)%len(f[0])],f[1][(i+1)%len(f[0])]))
         
 if __name__=="__main__":
     s = Sphero()
-# pose = [0,0,0]
-# control = [1,1]
-# pose = s.motion(pose,control,0.1)
-# print pose
-
