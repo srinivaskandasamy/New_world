@@ -82,41 +82,42 @@ Created by Srinivas K."""
         return (bc,wc1,wc2,wc3)
     
     def check_collision(self,constraints,pose):
-        print pose
+        wall_type = 0
         for i in range(len(constraints)):
             count = 0
             for j in range(len(constraints[i])): # bc needs count=4
-                print "Now",constraints[i][j]
-                ##################
                 # Checking Boundary collision
                 if i==0: # It is a boundary
                     if constraints[i][j][0]!=0: # Constraints with x-axis conditions
-                        if constraints[i][j][0]*pose[0] <= constraints[i][j][2]: # Violation of constraints
-                            print "xPose",pose[0]
-                            print "Constraint",constraints[i][j][2]
-                            print "Boundary Collision"
-                            if constraints[i][j][0] >= 0: # Constraint type 1 (180 degrees)
-                                print "First"
-                                print constraints[i][j]
-                                pose[2] = (pose[2] - 2*(pi-pose[2]))%(2*pi)
-                            else:                         # Constraint type 2 (0 degrees)
-                                print "Second"
-                                print constraints[i][j]
-                                pose[2] = (pose[2] + 2*(pose[2]))%(2*pi)
+                        if constraints[i][j][0]*pose[0] <= constraints[i][j][2]: # Violation of x conditioned constraints
+                            if constraints[i][j][0] >= 0: # Constraint type 1 (180 degrees) x <= 22
+                                wall_type = 1
+                                if pose[2] <= pi and pose[2] > pi/2:
+                                    pose[2] = pi/4
+                                elif pose[2] > pi and pose[2] <= 3*pi/2:
+                                    pose[2] = 7*pi/4
+                            else:                         # Constraint type 2 (0 degrees) x >= 480
+                                wall_type = 3
+                                if pose[2] > 3*pi/2 and pose[2] < 359*pi/180:
+                                    pose[2] = 5*pi/4
+                                elif pose[2] >=0 and pose[2] <= pi/2:
+                                    pose[2] = 3*pi/4
                     
                     if constraints[i][j][1]!=0: # Constraints with y-axis conditions
-                        if constraints[i][j][1]*pose[1] <= constraints[i][j][2]: # Violation of constraints
-                            print "yPose",pose[1]
-                            print "Constraint",constraints[i][j][2]
-                            print "Boundary Collision"
-                            if constraints[i][j][1] >= 0: # Constraint type 1 (270 degrees)
-                                print "Third"
-                                print constraints[i][j]
-                                pose[2] = (pose[2] - 2*(3*pi/2-pose[2]))%(2*pi)
-                            else:
-                                print "Fourth"
-                                print constraints[i][j]
-                                pose[2] = (pose[2] - 2*(pi/2-pose[2]))%(2*pi)
+                        if constraints[i][j][1]*pose[1] <= constraints[i][j][2]: # Violation of y conditioned constraints
+                            if constraints[i][j][1] >= 0: # Constraint type 1 (270 degrees) y <= 22
+                                wall_type = 2
+                                if pose[2] > 3*pi/2 and pose[2] < 359*pi/180:
+                                    pose[2] = pi/4
+                                elif pose[2] >= pi and pose[2] <= 3*pi/2:
+                                    pose[2] = 3*pi/4
+                            else:                                            #           y >= 480
+                                wall_type = 4
+                                if pose[2] >= 0 and pose[2] <= pi/2:
+                                    pose[2] = 7*pi/4
+                                elif pose[2] > pi/2 and pose[2] < pi:
+                                    pose[2] = 5*pi/4
+                                
                 
                 ###################
                 # Checking inner wall collision
@@ -124,41 +125,43 @@ Created by Srinivas K."""
                     if constraints[i][j][0]!=0: # Constraints with x-axis conditions
                         if constraints[i][j][0]*pose[0] <= constraints[i][j][2]: # Violation of constraints
                             count += 1
-                            print "Count",count
-                            print "Constraint",constraints[i][j]
                             if fabs(fabs(pose[0]) - fabs(constraints[i][j][2])) < 10:
-                                bingo = j
-                                print "Bingo",bingo
+                                bingo = j+1
                 
                     if constraints[i][j][1]!=0: # Constraints with y-axis conditions
                         if constraints[i][j][1]*pose[1] <= constraints[i][j][2]: # Violation of constraints
                             count += 1
-                            print count
-                            print "Constraint",constraints[i][j]
                             if fabs(fabs(pose[1]) - fabs(constraints[i][j][2])) < 10:
-                                bingo = -1*j
-                                print "Bingo",bingo
+                                bingo = -1*(j+1)
                                 
                     if count == len(constraints[i]):
-                        print "Inner wall collision detected"
-                        print "Constraints",constraints[i]
                         if bingo > 0:
-                            print "Bingap",constraints[i][bingo]
-                            if constraints[i][bingo][0] <= 0: # Constraint type 1 (180 degrees)
-                                print "Pose",pose[2]
-                                pose[2] = (pose[2] - 2*(pi-pose[2]))%(2*pi)
+                            if constraints[i][bingo-1][0] > 0: # Constraint type 1 (180 degrees)
+                                wall_type = 1
+                                if pose[2] <= pi and pose[2] > pi/2:
+                                    pose[2] = pi/4
+                                elif pose[2] > pi and pose[2] <= 3*pi/2:
+                                    pose[2] = 7*pi/4
                             else:                         # Constraint type 2 (0 degrees)
-                                print "POsee",pose[2]
-                                pose[2] = (pose[2] + 2*(pose[2]))%(2*pi)
+                                wall_type = 3
+                                if pose[2] > 3*pi/2 and pose[2] < 359*pi/180:
+                                    pose[2] = 5*pi/4
+                                elif pose[2] >=0 and pose[2] <= pi/2:
+                                    pose[2] = 3*pi/4
                         else:
-                            print "Bingan",constraints[i][-1*bingo]
-                            if constraints[i][-1*bingo][1] <= 0: # Constraint type 1 (270 degrees)
-                                print "Posy",pose[2]
-                                pose[2] = (pose[2] - 2*(3*pi/2-pose[2]))%(2*pi)
+                            if constraints[i][-1*bingo-1][1] <= 0: # Constraint type 1 (270 degrees)
+                                wall_type = 2
+                                if pose[2] > 3*pi/2 and pose[2] < 359*pi/180:
+                                    pose[2] = pi/4
+                                elif pose[2] >= pi and pose[2] <= 3*pi/2:
+                                    pose[2] = 3*pi/4
                             else:
-                                print "Posr",pose[2]
-                                pose[2] = (pose[2] - 2*(pi/2-pose[2]))%(2*pi)
-        return pose
+                                wall_type = 4
+                                if pose[2] >= 0 and pose[2] <= pi/2:
+                                    pose[2] = 7*pi/4
+                                elif pose[2] > pi/2 and pose[2] < pi:
+                                    pose[2] = 5*pi/4
+        return (pose,wall_type)
         
 if __name__=="__main__":
     s = Sphero()
