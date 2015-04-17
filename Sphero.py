@@ -2,6 +2,7 @@ from __future__ import division
 from math import cos, sin, pi, fabs
 from numpy import arange
 from Tkinter import *
+import pyglet
 
 WB = 2                            # RHP zero, wheel base
 r = 10                            # Radius of the sphero robot
@@ -83,6 +84,7 @@ Created by Srinivas K."""
     
     def check_collision(self,constraints,pose):
         wall_type = 0
+        music = pyglet.media.load("collision.mp3",streaming=False)
         for i in range(len(constraints)):
             count = 0
             for j in range(len(constraints[i])): # bc needs count=4
@@ -92,12 +94,14 @@ Created by Srinivas K."""
                         if constraints[i][j][0]*pose[0] <= constraints[i][j][2]: # Violation of x conditioned constraints
                             if constraints[i][j][0] >= 0: # Constraint type 1 (180 degrees) x <= 22
                                 wall_type = 1
+                                music.play()
                                 if pose[2] <= pi and pose[2] > pi/2:
                                     pose[2] = pi/4
                                 elif pose[2] > pi and pose[2] <= 3*pi/2:
                                     pose[2] = 7*pi/4
                             else:                         # Constraint type 2 (0 degrees) x >= 480
                                 wall_type = 3
+                                music.play()
                                 if pose[2] > 3*pi/2 and pose[2] < 359*pi/180:
                                     pose[2] = 5*pi/4
                                 elif pose[2] >=0 and pose[2] <= pi/2:
@@ -107,12 +111,14 @@ Created by Srinivas K."""
                         if constraints[i][j][1]*pose[1] <= constraints[i][j][2]: # Violation of y conditioned constraints
                             if constraints[i][j][1] >= 0: # Constraint type 1 (270 degrees) y <= 22
                                 wall_type = 2
+                                music.play()
                                 if pose[2] > 3*pi/2 and pose[2] < 359*pi/180:
                                     pose[2] = pi/4
                                 elif pose[2] >= pi and pose[2] <= 3*pi/2:
                                     pose[2] = 3*pi/4
                             else:                                            #           y >= 480
                                 wall_type = 4
+                                music.play()
                                 if pose[2] >= 0 and pose[2] <= pi/2:
                                     pose[2] = 7*pi/4
                                 elif pose[2] > pi/2 and pose[2] < pi:
@@ -138,12 +144,14 @@ Created by Srinivas K."""
                         if bingo > 0:
                             if constraints[i][bingo-1][0] > 0: # Constraint type 1 (180 degrees)
                                 wall_type = 1
+                                music.play()
                                 if pose[2] <= pi and pose[2] > pi/2:
                                     pose[2] = pi/4
                                 elif pose[2] > pi and pose[2] <= 3*pi/2:
                                     pose[2] = 7*pi/4
                             else:                         # Constraint type 2 (0 degrees)
                                 wall_type = 3
+                                music.play()
                                 if pose[2] > 3*pi/2 and pose[2] < 359*pi/180:
                                     pose[2] = 5*pi/4
                                 elif pose[2] >=0 and pose[2] <= pi/2:
@@ -151,12 +159,14 @@ Created by Srinivas K."""
                         else:
                             if constraints[i][-1*bingo-1][1] <= 0: # Constraint type 1 (270 degrees)
                                 wall_type = 2
+                                music.play()
                                 if pose[2] > 3*pi/2 and pose[2] < 359*pi/180:
                                     pose[2] = pi/4
                                 elif pose[2] >= pi and pose[2] <= 3*pi/2:
                                     pose[2] = 3*pi/4
                             else:
                                 wall_type = 4
+                                music.play()
                                 if pose[2] >= 0 and pose[2] <= pi/2:
                                     pose[2] = 7*pi/4
                                 elif pose[2] > pi/2 and pose[2] < pi:
