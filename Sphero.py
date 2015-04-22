@@ -82,7 +82,28 @@ Created by Srinivas K."""
         
         return (bc,wc1,wc2,wc3)
     
-    def check_collision(self,constraints,pose):
+    def wall_correction(self, constraint, pose, posep):
+        
+        if pose[0] - posep[0] == 0:
+            m = float("inf")
+            if constraint[0] == 0:
+                pose[1] = fabs(constraint[2])
+        elif pose[1] - posep[1] == 0:
+            m = 0
+            if constraint[1] == 0:
+                pose[0] = fabs(constraint[2])
+        elif pose[0] - posep[0] != 0 and pose[1] - posep[1] != 0:
+            m = (pose[1] - posep[1])/(pose[0]-posep[0])
+            if constraint[1] == 0:
+                pose[0] = fabs(constraint[2])
+                pose[1] = posep[1] + m * (fabs(constraint[2])-posep[0])
+            elif constraint[0] == 0:
+                pose[0] = posep[0] + (fabs(constraint[2]) - posep[1])*1/m
+                pose[1] = fabs(constraint[2])
+        return pose
+        
+
+    def check_collision(self,constraints,pose, posep, flag):
         wall_type = 0
         music = pyglet.media.load("collision.mp3",streaming=False)
         for i in range(len(constraints)):
@@ -95,6 +116,8 @@ Created by Srinivas K."""
                             if constraints[i][j][0] >= 0: # Constraint type 1 (180 degrees) x <= 22
                                 wall_type = 1
                                 music.play()
+                                if flag == 1:
+                                    pose = self.wall_correction(constraints[i][j], pose, posep)
                                 if pose[2] <= pi and pose[2] > pi/2:
                                     pose[2] = pi/4
                                 elif pose[2] > pi and pose[2] <= 3*pi/2:
@@ -102,6 +125,8 @@ Created by Srinivas K."""
                             else:                         # Constraint type 2 (0 degrees) x >= 480
                                 wall_type = 3
                                 music.play()
+                                if flag == 1:
+                                    pose = self.wall_correction(constraints[i][j], pose, posep)
                                 if pose[2] > 3*pi/2 and pose[2] < 359*pi/180:
                                     pose[2] = 5*pi/4
                                 elif pose[2] >=0 and pose[2] <= pi/2:
@@ -112,6 +137,8 @@ Created by Srinivas K."""
                             if constraints[i][j][1] >= 0: # Constraint type 1 (270 degrees) y <= 22
                                 wall_type = 2
                                 music.play()
+                                if flag == 1:
+                                    pose = self.wall_correction(constraints[i][j], pose, posep)
                                 if pose[2] > 3*pi/2 and pose[2] < 359*pi/180:
                                     pose[2] = pi/4
                                 elif pose[2] >= pi and pose[2] <= 3*pi/2:
@@ -119,6 +146,8 @@ Created by Srinivas K."""
                             else:                                            #           y >= 480
                                 wall_type = 4
                                 music.play()
+                                if flag == 1:
+                                    pose = self.wall_correction(constraints[i][j], pose, posep)
                                 if pose[2] >= 0 and pose[2] <= pi/2:
                                     pose[2] = 7*pi/4
                                 elif pose[2] > pi/2 and pose[2] < pi:
@@ -145,6 +174,8 @@ Created by Srinivas K."""
                             if constraints[i][bingo-1][0] > 0: # Constraint type 1 (180 degrees)
                                 wall_type = 1
                                 music.play()
+                                if flag == 1:
+                                    pose = self.wall_correction(constraints[i][bingo-1], pose, posep)
                                 if pose[2] <= pi and pose[2] > pi/2:
                                     pose[2] = pi/4
                                 elif pose[2] > pi and pose[2] <= 3*pi/2:
@@ -152,6 +183,8 @@ Created by Srinivas K."""
                             else:                         # Constraint type 2 (0 degrees)
                                 wall_type = 3
                                 music.play()
+                                if flag == 1:
+                                    pose = self.wall_correction(constraints[i][bingo-1], pose, posep)
                                 if pose[2] > 3*pi/2 and pose[2] < 359*pi/180:
                                     pose[2] = 5*pi/4
                                 elif pose[2] >=0 and pose[2] <= pi/2:
@@ -160,6 +193,8 @@ Created by Srinivas K."""
                             if constraints[i][-1*bingo-1][1] <= 0: # Constraint type 1 (270 degrees)
                                 wall_type = 2
                                 music.play()
+                                if flag == 1:
+                                    pose = self.wall_correction(constraints[i][-1*bingo-1], pose, posep)
                                 if pose[2] > 3*pi/2 and pose[2] < 359*pi/180:
                                     pose[2] = pi/4
                                 elif pose[2] >= pi and pose[2] <= 3*pi/2:
@@ -167,10 +202,13 @@ Created by Srinivas K."""
                             else:
                                 wall_type = 4
                                 music.play()
+                                if flag == 1:
+                                    pose = self.wall_correction(constraints[i][-1*bingo-1], pose, posep)
                                 if pose[2] >= 0 and pose[2] <= pi/2:
                                     pose[2] = 7*pi/4
                                 elif pose[2] > pi/2 and pose[2] < pi:
                                     pose[2] = 5*pi/4
+
         return (pose,wall_type)
         
 if __name__=="__main__":
