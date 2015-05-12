@@ -8,6 +8,7 @@ import sys
 class Particle:
     def __init__(self,pose):
         self.pose = pose
+        self.trajectory = []
         self.landmark_poses = []
         self.landmark_covariances = []
         self.hist_landmark = ['map',['0'],['pi/2'],['pi'],['3pi/2']]
@@ -24,6 +25,7 @@ class Particle:
     
     def move(self,control,WB,dt,pose):
         self.pose = self.motion(pose,control,WB,dt)
+        self.trajectory.append(self.pose)
         
     def expected_measurement(self,pose,landmark):     
         return array([landmark[0],landmark[1],tan(landmark[2]-pose[2])])      
@@ -177,6 +179,11 @@ class FastSLAM:
         self.particles = self.resample(weights)
         
         return weights
+    
+    def prune(self,w):
+        prune_traj = []
+        for i in range(2):
+            
         
 if __name__ == '__main__':
     
