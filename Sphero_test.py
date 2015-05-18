@@ -104,7 +104,7 @@ Created by Srinivas K."""
         
 
     def check_collision(self,constraints,pose, posep, flag):
-        wall_type = 0
+        wall_type = -1
         c = [0,0,0]
         music = pyglet.media.load("collision.mp3",streaming=False)
         for i in range(len(constraints)):
