@@ -25,12 +25,11 @@ Created by Srinivas K."""
         self.cursor_objects = []
         self.canvas = canvas
     
-    def motion(self, pose, control, dt):  # Unicycle mkotion model
-        control[1]=control[1]%360
-        angle = ((control[1]+pose[2]*180/pi)%360)*pi/180
-        return ([x+y for x,y in zip(pose,[control[0]*dt*cos(angle), 
-                                          control[0]*dt*sin(angle), 
-                                          control[0]*dt*sin(control[1]*pi/180)/WB])])
+    def motion(self, pose, control, WB, dt):  # Unicycle motion model
+        angle = (control[1]+pose[2])%(2*pi)
+        return ([x+y for x,y in zip(pose,[control[0]*dt*cos(angle),
+                                          control[0]*dt*sin(angle),
+                                          control[0]*dt*sin(control[1])/WB])])
     
     def draw(self, pose):     # Draw the Sphero robot in the simulated scene
         if self.cursor_objects:
@@ -102,33 +101,33 @@ Created by Srinivas K."""
                 pose[1] = fabs(constraint[2])
         return pose
         
-
-    def orientation_correction(pose, index, wall_type):   # Correct the orientation of remaining particles on receiving the measurement
+    # Correcting the particles for orientation;fsm - This is the continuation of prediction step of pf
+    def orientation_correction(self, pose, wall_type):
         for i in range(len(pose)):
-            if i!= index: # Update all the remaining particles except the best one, since it is already updated
-                if wall_type == 0:
-                    if pose[2] > 3*pi/2 and pose[2] < 359*pi/180:
-                        pose[2] = 5*pi/4
-                    elif pose[2] >=0 and pose[2] <= pi/2:
-                        pose[2] = 3*pi/4
-
-                elif wall_type == pi/2:
-                    if pose[2] >= 0 and pose[2] <= pi/2:
-                        pose[2] = 7*pi/4
-                    elif pose[2] > pi/2 and pose[2] < pi:
-                        pose[2] = 5*pi/4
-
-                elif wall_type == pi:
-                    if pose[2] <= pi and pose[2] > pi/2:
-                        pose[2] = pi/4
-                    elif pose[2] > pi and pose[2] <= 3*pi/2:
-                        pose[2] = 7*pi/4
-
-                elif wall_type == 3*pi/2:
-                    if pose[2] > 3*pi/2 and pose[2] < 359*pi/180:
-                        pose[2] = pi/4
-                    elif pose[2] >= pi and pose[2] <= 3*pi/2:
-                        pose[2] = 3*pi/4       
+            if wall_type == 0:
+                if pose[i][2] > 3*pi/2 and pose[i][2] < 359*pi/180:
+                    pose[i][2] = 5*pi/4
+                elif pose[i][2] >=0 and pose[i][2] <= pi/2:
+                    pose[i][2] = 3*pi/4
+                        
+            elif wall_type == pi/2:
+                if pose[i][2] >= 0 and pose[i][2] <= pi/2:
+                    pose[i][2] = 7*pi/4
+                elif pose[i][2] > pi/2 and pose[i][2] < pi:
+                    pose[i][2] = 5*pi/4
+                    
+            elif wall_type == pi:
+                if pose[i][2] <= pi and pose[i][2] > pi/2:
+                    pose[i][2] = pi/4
+                elif pose[i][2] > pi and pose[i][2] <= 3*pi/2:
+                    pose[i][2] = 7*pi/4
+            
+            elif wall_type == 3*pi/2:
+                if pose[i][2] > 3*pi/2 and pose[i][2] < 359*pi/180:
+                    pose[i][2] = pi/4
+                elif pose[i][2] >= pi and pose[i][2] <= 3*pi/2:
+                    pose[i][2] = 3*pi/4
+        return pose
     
     def check_collision(self,constraints,pose, posep, flag):
         wall_type = -1

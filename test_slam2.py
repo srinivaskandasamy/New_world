@@ -30,8 +30,8 @@ class Particle:
                                           control[0]*dt*sin(control[1])/WB])])
     
     def move(self,control,WB,dt):
-        self.posep = self.pose
-        self.pose = self.motion(self.posep,control,WB,dt)
+        self.posep = self.pose # REcording the previous pose
+        self.pose = self.motion(self.posep,control,WB,dt) # Motion of particles with noisy inputs
         return self.pose
         
     def expected_measurement(self,landmark):   # Not considering the other component  
@@ -53,9 +53,9 @@ class Particle:
         Ql = dot(dot(H,self.landmark_covariances[i]),H.T) + Qt_measurement_covariance
         
         return (H, Ql)
-        
-    def landmark_correspondence_likelihood(self,measurement,landmark_number,Qt):
-        # For a given measurment and a landmark number, it returns a suitable likelihood value of the correspondence           
+    
+    # For a given measurment and a landmark number, it returns a suitable likelihood value of the correspondence 
+    def landmark_correspondence_likelihood(self,measurement,landmark_number,Qt):          
         landmark = self.w[landmark_number]
         num_wall = len(landmark)
         likelihood=[]
@@ -243,16 +243,22 @@ class FastSLAM:
         # Constants
         self.robot_width = robot_width
         self.minimum_correspondence_likelihood = minimum_correspondence_likelihood
-        self.xstddev = xstddev
-        self.ystddev = ystddev
-        self.measurement_stddev = measurement_stddev
-        self.control_speed_factor = control_speed_factor
-        self.control_head_factor = control_head_factor
         self.dt = sample_time
         self.WB = robot_width
         
+        # Standard deviation in the robot position as scalar variables
+        self.xstddev = xstddev
+        self.ystddev = ystddev
+        
+        # Measurement standard deviation, as a scalar variable
+        self.measurement_stddev = measurement_stddev
+        
+        # Gain for input noise
+        self.control_speed_factor = control_speed_factor
+        self.control_head_factor = control_head_factor
+    
+    # Prediction step of FastSLAM
     def predict(self,control):
-        # Prediction step of FastSLAM
         speed, head = control
         # speed_std = self.control_speed_factor * sqrt(speed) # To be modified
         # head_std  = self.control_head_factor * sqrt(359 - head) # To be modified; mirror image of the speed deviation
@@ -267,13 +273,22 @@ class FastSLAM:
     def update_and_compute_weights(self,measurement):
         Qt = diag([self.xstddev ** 2, self.ystddev ** 2,self.measurement_stddev ** 2]) 
         weights = []
+        
+        # Used for computing the signature of the most likely particle
+        wall_info = []
+        wall_list = []
+        
         for p in self.particles:
             number_of_landmarks = p.number_of_landmarks()
             weight, wall, lw = p.update_particle(measurement,number_of_landmarks,self.minimum_correspondence_likelihood,
                                             Qt)
             weights.append(weight)
+            wall_info.append(wall)
+            wall_list.append(lw)
             
-        return weights, wall, lw
+        index = weights.index(max(weights)) # To return the wall information of most likely particle
+        
+        return weights, wall_info[index], wall_list[index]
     
     def resample(self,weights):
         new_particles = []
@@ -289,6 +304,7 @@ class FastSLAM:
             
         return new_particles
     
+    # Correction step of FastSLAM; pmeasurement is only used for pruning of histogram
     def correct(self,measurement,pmeasurement):
         weights, wall, lw = self.update_and_compute_weights(measurement)
         self.particles = self.resample(weights)
